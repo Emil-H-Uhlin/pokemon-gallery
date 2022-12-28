@@ -13,7 +13,7 @@ const Header = () => <div className="main-header">
       </li>
       <li>
         <NavButton target={"/browse"}>
-          Browse
+          Browse Pokemon
         </NavButton>
       </li>
     </ul>

@@ -1,4 +1,5 @@
 $app-width: 960px
+$footer-height: 100px
 
 .App
   position: absolute
@@ -71,8 +72,9 @@ $app-width: 960px
   .main-footer
     position: absolute
     bottom: 0
-    height: 100px
+    height: $footer-height
     width: $app-width
-    padding-top: 1em
+    border-top: solid 1px orange
 
   .content
+    padding-bottom: $footer-height
