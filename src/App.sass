@@ -24,9 +24,42 @@ $app-width: 960px
   height: 100%
 
   .main-header
-    height: 120px
     width: $app-width
-    padding-top: 1em
+    padding: 1em 0 0 0
+
+    border-bottom: solid 1px orange
+
+    .logo
+      height: 120px
+      text-align: center
+
+      img
+        margin: auto
+        height: 100%
+
+    .navbar
+      padding-top: 1em
+
+      ul
+        list-style-type: none
+        text-align: center
+        width: 100%
+        padding-left: 0
+        display: table
+        table-layout: fixed
+
+        li
+          display: table-cell
+
+      button
+        border: none
+        background-color: whitesmoke
+        width: 100%
+
+        &:hover
+          text-decoration: underline
+          cursor: pointer
+
 
   .main-footer
     position: absolute
