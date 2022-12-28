@@ -18,6 +18,7 @@ const App = () => <div className="App">
           <Footer/>
         </div>}>
           <Route path="/home" element={<HomePage/>}/>
+          <Route path={"*"} element={<p>page not found</p>}/>
         </Route>
       </Routes>
     </Router>
