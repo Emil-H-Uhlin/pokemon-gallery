@@ -12,7 +12,7 @@ const Header = () => <div className="main-header">
         </NavButton>
       </li>
       <li>
-        <NavButton target={"/browse"}>
+        <NavButton target={"/browse/"}>
           Browse Pokemon
         </NavButton>
       </li>
@@ -24,7 +24,7 @@ function NavButton({target, children:text}: { children: string, target: string})
   const navigate = useNavigate()
   const active = (() => {
     const {href:path, host} = window.location
-    return path.substring(path.indexOf(host) + host.length) === target
+    return path.substring(path.indexOf(host) + host.length).includes(target)
   })()
 
   const navigateToTarget = () => navigate(target)

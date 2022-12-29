@@ -1,4 +1,4 @@
-import {BrowserRouter as Router, Outlet, Route, Routes} from 'react-router-dom'
+import {BrowserRouter as Router, Link, Outlet, Route, Routes} from 'react-router-dom'
 
 import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
@@ -21,7 +21,7 @@ const App = () => <div className="App">
           <Footer/>
         </div>}>
           <Route path="/home" element={<HomePage/>}/>
-          <Route path="/browse" element={<BrowsingPage />}/>
+          <Route path="/browse/:page?" element={<BrowsingPage />} />
           <Route path={"*"} element={<p>page not found</p>}/>
         </Route>
       </Routes>

@@ -1,3 +1,4 @@
+@import "../App.sass"
 
 .browsing-page
   margin: 1em auto 1em auto
@@ -5,10 +6,12 @@
   details[open]
     border: solid 1px lightgrey
     min-height: 200px
+    padding: 1em
 
 .pokemon-filter
 
 .pokemon-list
+  margin-bottom: 2em
   ul
     list-style: none
     padding-left: 0
@@ -17,3 +20,19 @@
     img
       width: 200px
 
+.page-counter
+  position: absolute
+  bottom: $footer-height
+  width: $app-width
+  height: 2em
+  text-align: center
+  margin-bottom: 1em
+
+  ul
+    list-style-type: none
+    padding-left: 0
+
+    li
+      display: inline-block
+      margin: 0 .5em 0 .5em
+      width: 1em
