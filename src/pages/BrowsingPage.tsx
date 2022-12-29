@@ -8,6 +8,7 @@ import {Link, useNavigate} from "react-router-dom";
 
 interface FilterSettings {
   type: "ids" | "names",
+  sortAscending: boolean | "none"
   pageSize: number
 }
 
@@ -55,25 +56,39 @@ export default function BrowsingPage() {
 
   const {page: pageParam} = useParams()
 
-  useEffect(() => {
-    if (!pageParam || Number(pageParam) <= 0) navigate("/browse/1");
-    refetch()
-  }, [pageParam])
-
-  const numPokemon = useRef<number>(0)
-
   const [browseSettings, setBrowseSettings] = useState<FilterSettings>({
-    type: "ids",
+    type: "names",
+    sortAscending: true,
     pageSize: 25
   })
 
-  const [pokemon, loading, refetch] = (function usePokemonFetch() {
-    const {data: pokemon, isLoading, refetch, isRefetching} = useQuery<Pokemon[]>('', async () => {
-      const api = new PokemonClient()
-      const response = await api.listPokemons((Number(pageParam) - 1) * browseSettings.pageSize, browseSettings.pageSize)
+  useEffect(() => {
+    if (!pageParam || Number(pageParam) <= 0) navigate("/browse/1");
+    if (browseSettings.type === "ids") refetch()
+  }, [pageParam, browseSettings])
 
-      numPokemon.current = response.count
-      return response.results
+  const numPokemon = useRef<number>(0)
+
+  const [pokemon, loading, refetch] = (function usePokemonFetch() {
+    const {data: pokemon, isLoading, refetch, isRefetching} = useQuery<Pokemon[]>('pokemon', async () => {
+      switch (browseSettings.type) {
+        case "names": {
+          const {results} = await new PokemonClient().listPokemons(0, 9999)
+          numPokemon.current = results.length
+
+          return results.sort(({name}: Pokemon, {name: otherName}: Pokemon) =>
+            name.localeCompare(otherName) * (browseSettings.sortAscending ? 1: -1))
+        }
+
+        case "ids": {
+          const response = await new PokemonClient().listPokemons((Number(pageParam) - 1) * browseSettings.pageSize, browseSettings.pageSize)
+          numPokemon.current = response.count
+
+          return response.results
+        }
+      }
+    }, {
+      refetchOnWindowFocus: false
     })
 
     return [pokemon, isLoading || isRefetching, () => {
@@ -86,7 +101,7 @@ export default function BrowsingPage() {
   const items = usePagination(numPokemon.current, browseSettings.pageSize, Number(pageParam!))
 
   async function applyFilter() {
-
+    await refetch()
   }
 
   return <div className="browsing-page">
@@ -104,14 +119,24 @@ export default function BrowsingPage() {
     { !loading && <>
       <div className="pokemon-list">
         <ul>
-          {pokemon?.map((p: Pokemon) => <li key={p.url}>
-            <PokemonListItem pokemon={p}/>
-          </li>)}
+          { (() => {
+            switch (browseSettings.type) {
+              case "names":
+                return pokemon?.slice(browseSettings.pageSize * (Number(pageParam) - 1), Math.min(browseSettings.pageSize * Number(pageParam), numPokemon.current - 1))
+                  .map((p: Pokemon) => <li key={p.url}>
+                    <PokemonListItem pokemon={p}/>
+                  </li>)
+              case "ids":
+                return pokemon?.map((p: Pokemon) => <li key={p.url}>
+                  <PokemonListItem pokemon={p}/>
+                </li>)
+            }
+          })()}
         </ul>
       </div>
       <div className="page-counter">
         <ul>
-          {items}
+          {Array.from(items, (it, i) => ({ ...it, key: i})) /* prevent console from complaining about unique keys */ }
         </ul>
       </div>
     </>}
