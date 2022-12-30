@@ -4,14 +4,22 @@ import {useEffect, useLayoutEffect, useRef, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useQuery} from "react-query";
 
-import {PokemonClient, NamedAPIResource as Pokemon} from "pokenode-ts";
+import {PokemonClient, NamedAPIResource} from "pokenode-ts";
 
 import "../../styles/browsing.sass"
+
+interface PokemonResource extends NamedAPIResource {
+  id: number
+}
 
 interface FilterSettings {
   type: "ids" | "names",
   sortAscending: boolean | "none"
   pageSize: number
+}
+
+function getPokemonId({url}: NamedAPIResource): number {
+  return Number(url.substring(url.lastIndexOf("/", url.length - 2) + 1, url.length - 1))
 }
 
 export default function BrowsingPage() {
@@ -20,7 +28,7 @@ export default function BrowsingPage() {
   const {page: pageParam} = useParams()
 
   const [browseSettings, setBrowseSettings] = useState<FilterSettings>({
-    type: "names",
+    type: "ids",
     sortAscending: true,
     pageSize: 25
   })
@@ -33,21 +41,31 @@ export default function BrowsingPage() {
   const numPokemon = useRef<number>(0)
 
   const [pokemon, loading, refetch] = (function usePokemonFetch() {
-    const {data: pokemon, isLoading, refetch, isRefetching} = useQuery<Pokemon[]>('pokemon', async () => {
+    const {data: pokemon, isLoading, refetch, isRefetching} = useQuery<PokemonResource[]>('pokemon', async () => {
       switch (browseSettings.type) {
         case "names": {
           const {results} = await new PokemonClient().listPokemons(0, 9999)
           numPokemon.current = results.length
 
-          return results.sort(({name}: Pokemon, {name: otherName}: Pokemon) =>
-            name.localeCompare(otherName) * (browseSettings.sortAscending ? 1: -1))
+          return results
+            .sort(({name}: NamedAPIResource, {name: otherName}: NamedAPIResource) =>
+              name.localeCompare(otherName) * (browseSettings.sortAscending ? 1: -1))
+            .map(it => ({
+              ...it,
+              id: getPokemonId(it)
+            })
+          )
         }
 
         case "ids": {
           const response = await new PokemonClient().listPokemons((Number(pageParam) - 1) * browseSettings.pageSize, browseSettings.pageSize)
           numPokemon.current = response.count
 
-          return response.results
+          return response.results.map(it => ({
+              ...it,
+              id: getPokemonId(it)
+            })
+          )
         }
       }
     }, {
@@ -86,11 +104,11 @@ export default function BrowsingPage() {
             switch (browseSettings.type) {
               case "names":
                 return pokemon?.slice(browseSettings.pageSize * (Number(pageParam) - 1), Math.min(browseSettings.pageSize * Number(pageParam), numPokemon.current - 1))
-                  .map((p: Pokemon) => <li key={p.url}>
+                  .map((p: PokemonResource) => <li key={p.url}>
                     <PokemonListItem pokemon={p}/>
                   </li>)
               case "ids":
-                return pokemon?.map((p: Pokemon) => <li key={p.url}>
+                return pokemon?.map((p: PokemonResource) => <li key={p.url}>
                   <PokemonListItem pokemon={p}/>
                 </li>)
             }
@@ -106,8 +124,8 @@ export default function BrowsingPage() {
   </div>
 }
 
-const PokemonListItem = ({pokemon: {name, url}}: {pokemon: Pokemon}) => <div className="pokemon-list-item">
-  <p title={url.substring(url.lastIndexOf("/", url.length - 2) + 1, url.length - 1)}>
+const PokemonListItem = ({pokemon: {name, id}}: {pokemon: PokemonResource}) => <div className="pokemon-list-item">
+  <p title={id.toString()}>
     {name}
   </p>
 </div>
