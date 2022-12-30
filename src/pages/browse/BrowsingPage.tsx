@@ -126,8 +126,9 @@ export default function BrowsingPage() {
   </div>
 }
 
-const PokemonListItem = ({pokemon: {name, id}}: {pokemon: PokemonResource}) => <div className="pokemon-list-item">
-  <p title={id.toString()}>
-    {name}
-  </p>
+const PokemonListItem = ({pokemon: {name, id}}: {pokemon: PokemonResource}) => <div className="pokemon-list-item" title={`${id}`}>
+  <h2><Link to={`/browse/pokemon/${name}`}>{name[0].toUpperCase() + name.substring(1)}</Link></h2>
+  <img src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`} onError={({currentTarget}) => {
+    currentTarget.src = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png"
+  }} />
 </div>
