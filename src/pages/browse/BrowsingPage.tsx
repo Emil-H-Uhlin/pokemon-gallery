@@ -8,12 +8,16 @@ import {PokemonClient, NamedAPIResource} from "pokenode-ts";
 
 import "../../styles/browsing.sass"
 
+enum FilterType {
+  "ids", "names"
+}
+
 interface PokemonResource extends NamedAPIResource {
   id: number
 }
 
 interface FilterSettings {
-  type: "ids" | "names",
+  type: FilterType,
   sortAscending: boolean | "none"
   pageSize: number
 }
@@ -28,35 +32,36 @@ export default function BrowsingPage() {
   const {page: pageParam} = useParams()
 
   const [browseSettings, setBrowseSettings] = useState<FilterSettings>({
-    type: "ids",
+    type: FilterType.ids,
     sortAscending: true,
-    pageSize: 25
+    pageSize: 10
   })
 
   useEffect(() => {
     if (!pageParam || Number(pageParam) <= 0) navigate("/browse/1");
-  }, [pageParam, browseSettings])
+  }, [pageParam])
 
   const numPokemon = useRef<number>(0)
 
   const [pokemon, loading, refetch] = (function usePokemonFetch() {
     const {data: pokemon, isLoading, refetch, isRefetching} = useQuery<PokemonResource[]>('pokemon', async () => {
       switch (browseSettings.type) {
-        case "names": {
+        case FilterType.names:
+        {
           const {results} = await new PokemonClient().listPokemons(0, 9999)
           numPokemon.current = results.length
 
           return results
             .sort(({name}: NamedAPIResource, {name: otherName}: NamedAPIResource) =>
-              name.localeCompare(otherName) * (browseSettings.sortAscending ? 1: -1))
+              name.localeCompare(otherName) * (browseSettings.sortAscending ? 1 : -1))
             .map(it => ({
-              ...it,
-              id: getPokemonId(it)
-            })
-          )
+                ...it,
+                id: getPokemonId(it)
+              })
+            )
         }
 
-        case "ids": {
+        case FilterType.ids: {
           const response = await new PokemonClient().listPokemons((Number(pageParam) - 1) * browseSettings.pageSize, browseSettings.pageSize)
           numPokemon.current = response.count
 
@@ -78,7 +83,7 @@ export default function BrowsingPage() {
     }]
   })()
 
-  const updatePokemon = useCallback(refetch, [pageParam])
+  const updatePokemon = useCallback(refetch, [pageParam, browseSettings])
   useEffect(updatePokemon, [updatePokemon])
 
   const items = usePagination(numPokemon.current, browseSettings.pageSize, Number(pageParam!))
@@ -95,6 +100,9 @@ export default function BrowsingPage() {
           e.preventDefault()
           await applyFilter()
         }}>
+          <select onChange={e => setBrowseSettings(prev => ({...prev, type: e.target.selectedIndex}))}>
+            {Array.from(Object.entries(FilterType), ([, i], k) => Number.isFinite(i) ? null : <option key={k}>{i}</option>)}
+          </select>
           <button type="submit">Filter</button>
         </form>
       </div>
@@ -104,12 +112,12 @@ export default function BrowsingPage() {
         <ul>
           { (() => {
             switch (browseSettings.type) {
-              case "names":
+              case FilterType.names:
                 return pokemon?.slice(browseSettings.pageSize * (Number(pageParam) - 1), Math.min(browseSettings.pageSize * Number(pageParam), numPokemon.current - 1))
                   .map((p: PokemonResource) => <li key={p.url}>
                     <PokemonListItem pokemon={p}/>
                   </li>)
-              case "ids":
+              case FilterType.ids:
                 return pokemon?.map((p: PokemonResource) => <li key={p.url}>
                   <PokemonListItem pokemon={p}/>
                 </li>)
