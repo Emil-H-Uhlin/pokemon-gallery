@@ -1,55 +1,18 @@
-import {useEffect, useMemo, useRef, useState} from "react";
+import {usePagination} from "./pagination";
 
-import "../styles/browsing.sass"
-import {useParams} from "react-router";
-import {PokemonClient, NamedAPIResource as Pokemon} from "pokenode-ts";
+import {useEffect, useLayoutEffect, useRef, useState} from "react";
+import {useNavigate, useParams} from "react-router-dom";
 import {useQuery} from "react-query";
-import {Link, useNavigate} from "react-router-dom";
+
+import {PokemonClient, NamedAPIResource as Pokemon} from "pokenode-ts";
+
+import "../../styles/browsing.sass"
 
 interface FilterSettings {
   type: "ids" | "names",
   sortAscending: boolean | "none"
   pageSize: number
 }
-
-const usePagination = (totalPokemon: number, pokemonPerPage: number,
-                       currentPage: number, siblingCount = 2, ) =>
-  useMemo(() => {
-    const numPages = Math.ceil(totalPokemon / pokemonPerPage)
-
-    if (numPages <= 1) {
-      return []
-    }
-
-    if (numPages <= 5) {
-      return Array.from({length: numPages}, (_, v) => v + 1 === currentPage
-        ? <li>{v + 1}</li>
-        : <li><Link to={`/browse/${v + 1}`}>{v + 1}</Link></li>)
-    }
-
-    const result: JSX.Element[] = []
-
-    let rightPad = Math.max((currentPage - siblingCount - 1) * -1, 0)
-    let leftPad = Math.max((currentPage + siblingCount - numPages), 0)
-
-    if (currentPage - siblingCount > 1)
-      result.push(<li><Link to={"/browse/1"}>1</Link></li>, <li>...</li>)
-
-    for (let i = Math.max(currentPage - siblingCount, 1) - leftPad; i < currentPage; i++) {
-      result.push(<li><Link to={`/browse/${i}`}>{i}</Link></li>)
-    }
-
-    result.push(<li>{currentPage}</li>)
-
-    for (let i = currentPage + 1; i <= Math.min(currentPage + siblingCount, numPages) + rightPad; i++) {
-      result.push(<li><Link to={`/browse/${i}`}>{i}</Link></li>)
-    }
-
-    if (currentPage + siblingCount < numPages)
-      result.push(<li>...</li>, <li><Link to={`/browse/${numPages}`}>{numPages}</Link></li>)
-
-    return result
-  }, [totalPokemon, pokemonPerPage, currentPage, siblingCount])
 
 export default function BrowsingPage() {
   const navigate = useNavigate()

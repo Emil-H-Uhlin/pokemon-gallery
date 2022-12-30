@@ -4,7 +4,7 @@ import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import BrowsingPage from "./pages/BrowsingPage";
+import BrowsingPage from "./pages/browse/BrowsingPage";
 
 import './App.sass'
 
