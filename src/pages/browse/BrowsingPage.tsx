@@ -1,7 +1,7 @@
 import {usePagination} from "./pagination";
 
-import {useEffect, useLayoutEffect, useRef, useState} from "react";
-import {useNavigate, useParams} from "react-router-dom";
+import {useCallback, useEffect, useRef, useState} from "react";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import {useQuery} from "react-query";
 
 import {PokemonClient, NamedAPIResource} from "pokenode-ts";
@@ -35,7 +35,6 @@ export default function BrowsingPage() {
 
   useEffect(() => {
     if (!pageParam || Number(pageParam) <= 0) navigate("/browse/1");
-    if (browseSettings.type === "ids") refetch()
   }, [pageParam, browseSettings])
 
   const numPokemon = useRef<number>(0)
@@ -78,6 +77,9 @@ export default function BrowsingPage() {
       })()
     }]
   })()
+
+  const updatePokemon = useCallback(refetch, [pageParam])
+  useEffect(updatePokemon, [updatePokemon])
 
   const items = usePagination(numPokemon.current, browseSettings.pageSize, Number(pageParam!))
 
